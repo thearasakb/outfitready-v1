@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import { createClothes } from "../api/outfitAPI";
@@ -13,8 +13,20 @@ export default function UploadClothes() {
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // 1) จัดการเมื่อเลือกไฟล์รูปภาพ
+  // 1) ตรวจสอบการเข้าสู่ระบบเมื่อเปิดหน้า
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    } else {
+      alert("กรุณาเข้าสู่ระบบก่อนเพิ่มเสื้อผ้า");
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  // 2) จัดการเมื่อเลือกไฟล์รูปภาพ
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -23,7 +35,7 @@ export default function UploadClothes() {
     }
   };
 
-  // 2) กดบันทึก → รวมข้อมูลลง FormData → เรียก createClothes
+  // 3) กดบันทึก → รวมข้อมูลลง FormData โดยใช้ user_id จากคนที่ล็อกอิน
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -32,11 +44,17 @@ export default function UploadClothes() {
       return;
     }
 
+    if (!currentUser) {
+      alert("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
+      navigate("/login");
+      return;
+    }
+
     setIsSubmitting(true);
 
     // สร้าง FormData สำหรับส่งข้อมูลและไฟล์ภาพ
     const formData = new FormData();
-    formData.append("user_id", 1);
+    formData.append("user_id", currentUser.id); // ดึง user_id จริงจากระบบ
     formData.append("name", name);
     formData.append("category", category);
     formData.append("description", description);
@@ -45,7 +63,7 @@ export default function UploadClothes() {
     try {
       await createClothes(formData);
       alert("เพิ่มเสื้อผ้าสำเร็จ!");
-      navigate("/"); // เพิ่มเสร็จกลับไปหน้าตู้เสื้อผ้า
+      navigate("/wardrobe"); // บันทึกเสร็จกลับไปหน้าตู้เสื้อผ้า
     } catch (error) {
       console.error("Error creating clothes:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูลเสื้อผ้า");
@@ -57,7 +75,7 @@ export default function UploadClothes() {
   return (
     <div className="upload-container">
       {/* ปุ่มย้อนกลับ */}
-      <button className="back-btn" onClick={() => navigate("/")}>
+      <button className="back-btn" onClick={() => navigate("/wardrobe")}>
         <ArrowLeft size={18} /> ย้อนกลับไปหน้าตู้เสื้อผ้า
       </button>
 
@@ -108,6 +126,7 @@ export default function UploadClothes() {
                 placeholder="เช่น เสื้อเชิ้ตขาวแขนยาว, กางเกงสแล็คดำ"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
               />
             </div>
 

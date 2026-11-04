@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap');
+
 :root {
   --primary: #1d2328;
   --primary-hover: #343a40;
@@ -12,6 +14,8 @@
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+  /* ฟอนต์ภาษาไทยและอังกฤษสำหรับทั้งระบบ */
+  --font-family: 'Plus Jakarta Sans', 'Kanit', 'Prompt', system-ui, -apple-system, sans-serif;
 }
 
 /* ==========================================================================
@@ -21,8 +25,9 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 32px 24px 60px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-family);
   color: var(--primary);
+  line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -48,7 +53,7 @@
   font-weight: 800;
   color: var(--primary);
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.2;
   letter-spacing: -0.03em;
 }
 
@@ -56,6 +61,7 @@
   margin: 0;
   color: var(--text-muted);
   font-size: 0.95rem;
+  font-weight: 400;
 }
 
 .header-actions {
@@ -72,6 +78,7 @@
   border: none;
   cursor: pointer;
   white-space: nowrap;
+  font-family: var(--font-family);
   transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -116,6 +123,43 @@
   background-color: rgba(213, 138, 90, 0.22);
 }
 
+/* ป้ายแสดง User ID และชื่อผู้ใช้ภาษาไทย */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #1d2328;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  font-family: var(--font-family);
+}
+
+.user-badge .user-icon {
+  color: var(--accent-dark);
+}
+
+/* ปุ่ม Logout ในป้าย User */
+.logout-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  margin-left: 4px;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.logout-btn:hover {
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
 /* ==========================================================================
    3. Prompt Section (Gemini AI Search Bar)
    ========================================================================== */
@@ -157,12 +201,14 @@
   border: none;
   outline: none;
   font-size: 1rem;
+  font-family: var(--font-family);
   color: var(--primary);
   background: transparent;
 }
 
 .input-wrapper input::placeholder {
   color: var(--text-placeholder);
+  font-family: var(--font-family);
 }
 
 /* Button: คำนวณชุด (Submit) */
@@ -184,7 +230,66 @@
 }
 
 /* ==========================================================================
-   4. Clothing Image Grid (Gallery)
+   4. Category Filter Buttons (ปุ่มเลือกหมวดหมู่ภาษาไทย)
+   ========================================================================== */
+.category-section {
+  margin-bottom: 28px;
+}
+
+.category-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.category-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  color: #555555;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #cccccc;
+}
+
+.category-btn.active {
+  background-color: #111827;
+  color: #ffffff;
+  border-color: #111827;
+  font-weight: 600;
+}
+
+/* หัวข้อ เสื้อผ้าของคุณ */
+.section-title {
+  margin-bottom: 20px;
+}
+
+.section-title h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.count-badge {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   5. Clothing Image Grid (Gallery) & Status Text
    ========================================================================== */
 .image-grid {
   display: grid;
@@ -221,10 +326,12 @@
   color: var(--text-muted);
   margin-top: 60px;
   font-size: 1.05rem;
+  font-family: var(--font-family);
+  font-weight: 400;
 }
 
 /* ==========================================================================
-   5. Responsive Styles
+   6. Responsive Styles
    ========================================================================== */
 @media (max-width: 768px) {
   .wardrobe-header {
@@ -265,57 +372,4 @@
   .image-card {
     border-radius: 14px;
   }
-}
-/* ส่วนหมวดหมู่ */
-.category-section {
-  margin-bottom: 24px;
-}
-
-.category-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.category-btn {
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid #e0e0e0;
-  background-color: #ffffff;
-  color: #555555;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.category-btn:hover {
-  background-color: #f5f5f5;
-  border-color: #cccccc;
-}
-
-.category-btn.active {
-  background-color: #111827;
-  color: #ffffff;
-  border-color: #111827;
-}
-
-/* หัวข้อ เสื้อผ้าของคุณ */
-.section-title {
-  margin-bottom: 16px;
-}
-
-.section-title h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.count-badge {
-  font-size: 0.9rem;
-  color: #6b7280;
-  font-weight: 400;
 }

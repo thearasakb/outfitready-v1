@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Upload, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Upload } from "lucide-react";
 import { getClothesById, updateClothes } from "../api/outfitAPI";
 import "./UploadClothes.css";
 
@@ -10,35 +10,52 @@ export default function UpdateClothes() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("shirt");
-  const [description, setDescription] = useState(""); // 1. เพิ่ม state สำหรับ description
+  const [description, setDescription] = useState("");
   const [currentImage, setCurrentImage] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // 2) เปิดหน้า → โหลดข้อมูลเดิมมาใส่ Form
+  // 1) เปิดหน้า → ตรวจสอบ User และโหลดข้อมูลเดิมมาใส่ Form
   useEffect(() => {
-    loadItem();
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setCurrentUser(parsedUser);
+      loadItem(parsedUser.id);
+    } else {
+      alert("กรุณาเข้าสู่ระบบก่อนทำการแก้ไขข้อมูล");
+      navigate("/login");
+    }
   }, [id]);
 
-  async function loadItem() {
+  async function loadItem(userId) {
     try {
       const data = await getClothesById(id);
+      
+      // ตรวจสอบความถูกต้อง: ถ้าไม่ใช่เสื้อผ้าของตัวเอง ห้ามแก้ไข
+      if (userId && Number(data.user_id) !== Number(userId)) {
+        alert("คุณไม่มีสิทธิ์แก้ไขรายการเสื้อผ้านี้");
+        navigate("/wardrobe");
+        return;
+      }
+
       setName(data.name || "");
       setCategory(data.category || "shirt");
-      setDescription(data.description || ""); // ดึงคำอธิบายเดิมมาใส่ใน state
+      setDescription(data.description || "");
       setCurrentImage(data.image_url || "");
     } catch (error) {
       console.error("Error loading clothes detail:", error);
       alert("ไม่สามารถดึงข้อมูลเสื้อผ้าได้");
-      navigate("/");
+      navigate("/wardrobe");
     } finally {
       setIsLoading(false);
     }
   }
 
-  // 3) เปลี่ยนรูปภาพใหม่
+  // 2) เปลี่ยนรูปภาพใหม่
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -47,7 +64,7 @@ export default function UpdateClothes() {
     }
   };
 
-  // 4) กดบันทึกการแก้ไข
+  // 3) กดบันทึกการแก้ไข
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -55,7 +72,10 @@ export default function UpdateClothes() {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("category", category);
-    formData.append("description", description); // 3. ส่ง description เข้า formData
+    formData.append("description", description);
+    if (currentUser) {
+      formData.append("user_id", currentUser.id);
+    }
     if (imageFile) {
       formData.append("image", imageFile);
     }
@@ -75,7 +95,7 @@ export default function UpdateClothes() {
   if (isLoading) {
     return (
       <div className="upload-container">
-        <p>กำลังโหลดข้อมูล...</p>
+        <p className="status-text">กำลังโหลดข้อมูล...</p>
       </div>
     );
   }
@@ -126,6 +146,8 @@ export default function UpdateClothes() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="ระบุชื่อเสื้อผ้า"
+                required
               />
             </div>
 
@@ -144,7 +166,6 @@ export default function UpdateClothes() {
               </select>
             </div>
 
-            {/* 4. ช่องกรอกรายละเอียดเพิ่มเติม */}
             <div className="form-group">
               <label htmlFor="description">รายละเอียดเพิ่มเติม (Optional)</label>
               <textarea

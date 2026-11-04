@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Sparkles, Send, MapPin, Shuffle, Layers } from "lucide-react";
+import { Plus, Sparkles, Send, MapPin, Shuffle, Layers, LogOut, User as UserIcon } from "lucide-react";
 import { getAllClothes } from "../api/outfitAPI";
 import "./ListClothes.css";
 
@@ -8,11 +8,11 @@ export default function ListClothes() {
   const [clothes, setClothes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [destination, setDestination] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all"); // State สำหรับหมวดหมู่ที่เลือก
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [currentUser, setCurrentUser] = useState(null);
 
   const navigate = useNavigate();
 
-  // รายการหมวดหมู่สำหรับสร้างปุ่มกด
   const categories = [
     { id: "all", label: "ทั้งหมด" },
     { id: "shirt", label: "เสื้อ" },
@@ -22,16 +22,28 @@ export default function ListClothes() {
     { id: "accessory", label: "เครื่องประดับ" },
   ];
 
-  // 1) เปิดหน้า → โหลดรายการเสื้อผ้า
+  // 1) อ่านข้อมูล User จาก localStorage เมื่อเปิดหน้า
   useEffect(() => {
-    loadClothes();
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setCurrentUser(parsedUser);
+      loadClothes(parsedUser.id);
+    } else {
+      loadClothes(null);
+    }
   }, []);
 
-  async function loadClothes() {
+  // 2) โหลดรายการเสื้อผ้า (กรองตาม user_id)
+  async function loadClothes(userId) {
     setIsLoading(true);
     try {
       const data = await getAllClothes();
-      setClothes(data);
+      if (userId) {
+        setClothes(data.filter((item) => Number(item.user_id) === Number(userId)));
+      } else {
+        setClothes(data);
+      }
     } catch (error) {
       console.error("Error loading clothes:", error);
     } finally {
@@ -39,12 +51,19 @@ export default function ListClothes() {
     }
   }
 
-  // 2) กรองเสื้อผ้าตามหมวดหมู่ที่เลือก
+  // 3) ออกจากระบบ (Logout)
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    alert("ออกจากระบบเรียบร้อยแล้ว");
+    navigate("/");
+  };
+
+  // 4) กรองเสื้อผ้าตามหมวดหมู่
   const filteredClothes = selectedCategory === "all"
     ? clothes
     : clothes.filter((item) => item.category === selectedCategory);
 
-  // 3) ฟังก์ชันแนะนำแบบรวดเร็ว
+  // 5) ฟังก์ชันแนะนำแบบรวดเร็ว
   const handleQuickRecommend = () => {
     if (clothes.length === 0) {
       alert("ยังไม่มีเสื้อผ้าในตู้เลยครับ เพิ่มเสื้อผ้าก่อนนะ!");
@@ -55,7 +74,6 @@ export default function ListClothes() {
     alert(`วันสบายๆ แนะนำให้ใส่ชุดนี้เลย: ${randomItem.name || "ชุดในตู้ของคุณ"}`);
   };
 
-  // 4) ฟังก์ชันส่งงาน/สถานที่ไปให้ Gemini คำนวณ
   const handleSubmitPrompt = (e) => {
     e.preventDefault();
     if (!destination.trim()) {
@@ -74,7 +92,22 @@ export default function ListClothes() {
           <p className="sub-title">ตู้เสื้อผ้าอัจฉริยะของคุณ</p>
         </div>
 
+        {/* มุมขวา: แสดง User ID / Username และ ปุ่ม Action */}
         <div className="header-actions">
+          {currentUser && (
+            <div className="user-badge">
+              <UserIcon size={16} className="user-icon" />
+              <span>{currentUser.username} (ID: {currentUser.id})</span>
+              <button 
+                onClick={handleLogout} 
+                className="logout-btn"
+                title="ออกจากระบบ"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          )}
+
           <button className="quick-recommend-btn" onClick={handleQuickRecommend}>
             <Shuffle size={16} />
             แนะนำแบบรวดเร็ว
@@ -107,7 +140,7 @@ export default function ListClothes() {
         </form>
       </section>
 
-      {/* ส่วนเลือกหมวดหมู่เสื้อผ้า (Category Filter Buttons) */}
+      {/* ส่วนเลือกหมวดหมู่เสื้อผ้า */}
       <section className="category-section">
         <div className="category-buttons">
           {categories.map((cat) => (
@@ -126,18 +159,18 @@ export default function ListClothes() {
       <div className="section-title">
         <h2>
           <Layers size={20} />
-          เสื้อผ้าของคุณ
+          {currentUser ? `ตู้เสื้อผ้าของ ${currentUser.username}` : "เสื้อผ้าของคุณ"}
           <span className="count-badge">({filteredClothes.length})</span>
         </h2>
       </div>
 
-      {/* Grid แสดงรูปภาพเสื้อผ้าที่ผ่านการกรอก */}
+      {/* Grid แสดงรูปภาพเสื้อผ้า */}
       {isLoading ? (
         <p className="status-text">กำลังโหลดตู้เสื้อผ้า...</p>
       ) : filteredClothes.length === 0 ? (
         <p className="status-text">
           {selectedCategory === "all"
-            ? "ยังไม่มีรายการเสื้อผ้าในตู้"
+            ? "ยังไม่มีรายการเสื้อผ้าในตู้ของคุณ"
             : "ไม่มีเสื้อผ้าในหมวดหมู่นี้"}
         </p>
       ) : (
