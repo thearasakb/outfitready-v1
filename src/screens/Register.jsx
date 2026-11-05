@@ -5,6 +5,7 @@ import "./Resigter.css";
 
 export default function Register() {
   const [username, setUsername] = useState("");
+  const [gender, setGender] = useState("unspecified");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,9 +17,13 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    // ตรวจสอบข้อมูลเบื้องต้น
     if (!username.trim() || !password.trim()) {
       setError("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+
+    if (!["male", "female", "unspecified"].includes(gender)) {
+      setError("กรุณาเลือกเพศ");
       return;
     }
 
@@ -35,7 +40,11 @@ export default function Register() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+          gender,
+        }),
       });
 
       const data = await response.json();
@@ -56,8 +65,7 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        {/* ปุ่มย้อนกลับไปหน้า Home */}
-        <button className="back-link" onClick={() => navigate("/")}>
+        <button type="button" className="back-link" onClick={() => navigate("/")}>
           <ArrowLeft size={16} /> ย้อนกลับ
         </button>
 
@@ -83,6 +91,19 @@ export default function Register() {
                 required
               />
             </div>
+          </label>
+
+          <label>
+            เพศ (Gender)
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              required
+            >
+              <option value="unspecified">ไม่ระบุ</option>
+              <option value="male">ชาย</option>
+              <option value="female">หญิง</option>
+            </select>
           </label>
 
           <label>
